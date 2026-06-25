@@ -20,6 +20,7 @@ A browser-based Whack-a-Mole game with a persistent leaderboard, built to demons
 - Node.js 20+
 - .NET 10 SDK
 - Docker (for PostgreSQL)
+- EF Core CLI: `dotnet tool install --global dotnet-ef`
 
 ### 1. Start PostgreSQL
 
