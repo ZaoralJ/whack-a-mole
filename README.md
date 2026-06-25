@@ -50,11 +50,11 @@ Game runs at `http://localhost:5173`
 
 ## Game Rules
 
-- 3×3 grid of mole holes
+- 5×5 grid of mole holes
 - Moles pop up randomly, stay visible for ~1 second
 - Click a visible mole to score a point
 - Game lasts 30 seconds
-- At most 2 moles visible simultaneously
+- At most 3 moles visible simultaneously
 - After game over, enter your name and submit to the leaderboard
 
 ## API Endpoints
