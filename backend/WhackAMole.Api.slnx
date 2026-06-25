@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="WhackAMole.Api.Tests/WhackAMole.Api.Tests.csproj" />
+  <Project Path="WhackAMole.Api/WhackAMole.Api.csproj" />
+</Solution>
