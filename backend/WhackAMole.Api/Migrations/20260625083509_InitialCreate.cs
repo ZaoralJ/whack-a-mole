@@ -20,12 +20,18 @@ namespace WhackAMole.Api.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     player_name = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
                     score = table.Column<int>(type: "integer", nullable: false),
-                    played_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    played_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_scores", x => x.id);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_scores_score",
+                table: "scores",
+                column: "score",
+                descending: new bool[0]);
         }
 
         /// <inheritdoc />

@@ -1,9 +1,9 @@
 namespace WhackAMole.Api.Models;
 
-public class Score
+public class ScoreEntry
 {
     public int Id { get; set; }
     public string PlayerName { get; set; } = string.Empty;
-    public int Points { get; set; }
-    public DateTime PlayedAt { get; set; }
+    public int Score { get; set; }
+    public DateTimeOffset PlayedAt { get; set; }
 }

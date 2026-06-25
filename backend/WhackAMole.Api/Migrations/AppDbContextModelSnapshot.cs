@@ -22,7 +22,7 @@ namespace WhackAMole.Api.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("WhackAMole.Api.Models.Score", b =>
+            modelBuilder.Entity("WhackAMole.Api.Models.ScoreEntry", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -31,7 +31,7 @@ namespace WhackAMole.Api.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("PlayedAt")
+                    b.Property<DateTimeOffset>("PlayedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("played_at");
 
@@ -41,11 +41,14 @@ namespace WhackAMole.Api.Migrations
                         .HasColumnType("character varying(30)")
                         .HasColumnName("player_name");
 
-                    b.Property<int>("Points")
+                    b.Property<int>("Score")
                         .HasColumnType("integer")
                         .HasColumnName("score");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Score")
+                        .IsDescending();
 
                     b.ToTable("scores", (string)null);
                 });
