@@ -39,8 +39,7 @@ public class ScoreService : IScoreService
 
     public async Task<IReadOnlyList<ScoreResponse>> GetTopScoresAsync(int count)
     {
-        if (count is < 1 or > 50)
-            count = 10;
+        count = Math.Clamp(count, 1, 50);
 
         var entries = await _repository.GetTopScoresAsync(count);
 

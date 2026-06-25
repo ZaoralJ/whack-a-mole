@@ -16,12 +16,14 @@ public class ScoresController : ControllerBase
     }
 
     [HttpPost]
+    [ProducesResponseType(typeof(ScoreResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Submit([FromBody] SubmitScoreRequest request)
     {
         try
         {
             var response = await _scoreService.SubmitScoreAsync(request);
-            return Created($"/api/scores/{response.Id}", response);
+            return StatusCode(StatusCodes.Status201Created, response);
         }
         catch (ArgumentException ex)
         {
@@ -30,6 +32,7 @@ public class ScoresController : ControllerBase
     }
 
     [HttpGet]
+    [ProducesResponseType(typeof(IReadOnlyList<ScoreResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetTopScores([FromQuery] int top = 10)
     {
         var scores = await _scoreService.GetTopScoresAsync(top);
