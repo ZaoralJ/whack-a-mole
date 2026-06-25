@@ -10,7 +10,7 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
   webServer: {
-    command: 'npm run dev',
+    command: 'VITE_GAME_DURATION_MS=3000 npm run dev',
     url: 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,
   },
