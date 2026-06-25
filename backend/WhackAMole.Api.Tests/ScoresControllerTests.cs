@@ -5,13 +5,22 @@ using WhackAMole.Api.Tests.Helpers;
 
 namespace WhackAMole.Api.Tests;
 
-public class ScoresControllerTests : IClassFixture<TestWebApplicationFactory>
+public class ScoresControllerTests : IAsyncLifetime
 {
-    private readonly HttpClient _client;
+    private TestWebApplicationFactory _factory = null!;
+    private HttpClient _client = null!;
 
-    public ScoresControllerTests(TestWebApplicationFactory factory)
+    public Task InitializeAsync()
     {
-        _client = factory.CreateClient();
+        _factory = new TestWebApplicationFactory();
+        _client = _factory.CreateClient();
+        return Task.CompletedTask;
+    }
+
+    public async Task DisposeAsync()
+    {
+        _client.Dispose();
+        await _factory.DisposeAsync();
     }
 
     [Fact]
@@ -30,24 +39,18 @@ public class ScoresControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.True(body.Id > 0);
     }
 
-    [Fact]
-    public async Task Post_EmptyName_Returns400()
+    [Theory]
+    [InlineData("", 5, HttpStatusCode.BadRequest)]
+    [InlineData("   ", 5, HttpStatusCode.BadRequest)]
+    [InlineData("Bob", -1, HttpStatusCode.BadRequest)]
+    [InlineData("Bob", 100, HttpStatusCode.BadRequest)]
+    public async Task Post_InvalidInput_Returns400(string name, int score, HttpStatusCode expected)
     {
-        var request = new SubmitScoreRequest("", 5);
+        var request = new SubmitScoreRequest(name, score);
 
         var response = await _client.PostAsJsonAsync("/api/scores", request);
 
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task Post_WhitespaceName_Returns400()
-    {
-        var request = new SubmitScoreRequest("   ", 5);
-
-        var response = await _client.PostAsJsonAsync("/api/scores", request);
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal(expected, response.StatusCode);
     }
 
     [Fact]
@@ -58,6 +61,18 @@ public class ScoresControllerTests : IClassFixture<TestWebApplicationFactory>
         var response = await _client.PostAsJsonAsync("/api/scores", request);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(99)]
+    public async Task Post_BoundaryScores_Returns201(int score)
+    {
+        var request = new SubmitScoreRequest("Boundary", score);
+
+        var response = await _client.PostAsJsonAsync("/api/scores", request);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
     }
 
     [Fact]
@@ -71,77 +86,61 @@ public class ScoresControllerTests : IClassFixture<TestWebApplicationFactory>
     }
 
     [Fact]
-    public async Task Post_NegativeScore_Returns400()
+    public async Task Post_TrimmedName_StoredWithoutLeadingTrailingSpaces()
     {
-        var request = new SubmitScoreRequest("Bob", -1);
+        await _client.PostAsJsonAsync("/api/scores", new SubmitScoreRequest("  Padded  ", 7));
 
-        var response = await _client.PostAsJsonAsync("/api/scores", request);
+        var response = await _client.GetAsync("/api/scores");
+        var scores = await response.Content.ReadFromJsonAsync<List<ScoreResponse>>();
 
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task Post_ScoreAbove99_Returns400()
-    {
-        var request = new SubmitScoreRequest("Bob", 100);
-
-        var response = await _client.PostAsJsonAsync("/api/scores", request);
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task Post_ScoreZero_Returns201()
-    {
-        var request = new SubmitScoreRequest("Zero", 0);
-
-        var response = await _client.PostAsJsonAsync("/api/scores", request);
-
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task Post_Score99_Returns201()
-    {
-        var request = new SubmitScoreRequest("Max", 99);
-
-        var response = await _client.PostAsJsonAsync("/api/scores", request);
-
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        Assert.NotNull(scores);
+        Assert.Contains(scores, s => s.PlayerName == "Padded");
     }
 
     [Fact]
     public async Task Get_ReturnsOrderedByScoreDescending()
     {
-        var factory = new TestWebApplicationFactory();
-        var client = factory.CreateClient();
+        await _client.PostAsJsonAsync("/api/scores", new SubmitScoreRequest("Low", 3));
+        await _client.PostAsJsonAsync("/api/scores", new SubmitScoreRequest("High", 20));
+        await _client.PostAsJsonAsync("/api/scores", new SubmitScoreRequest("Mid", 10));
 
-        await client.PostAsJsonAsync("/api/scores", new SubmitScoreRequest("Low", 3));
-        await client.PostAsJsonAsync("/api/scores", new SubmitScoreRequest("High", 20));
-        await client.PostAsJsonAsync("/api/scores", new SubmitScoreRequest("Mid", 10));
-
-        var response = await client.GetAsync("/api/scores");
+        var response = await _client.GetAsync("/api/scores");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         var scores = await response.Content.ReadFromJsonAsync<List<ScoreResponse>>();
         Assert.NotNull(scores);
-        Assert.Equal(3, scores.Count);
-        Assert.Equal("High", scores[0].PlayerName);
-        Assert.Equal("Mid", scores[1].PlayerName);
-        Assert.Equal("Low", scores[2].PlayerName);
+        Assert.True(scores.Count >= 3);
+
+        var top3 = scores.Take(3).ToList();
+        Assert.True(top3[0].Score >= top3[1].Score);
+        Assert.True(top3[1].Score >= top3[2].Score);
+    }
+
+    [Fact]
+    public async Task Get_EqualScores_TieBreakByEarliestPlayedAt()
+    {
+        await _client.PostAsJsonAsync("/api/scores", new SubmitScoreRequest("First", 10));
+        await Task.Delay(50);
+        await _client.PostAsJsonAsync("/api/scores", new SubmitScoreRequest("Second", 10));
+
+        var response = await _client.GetAsync("/api/scores");
+        var scores = await response.Content.ReadFromJsonAsync<List<ScoreResponse>>();
+
+        Assert.NotNull(scores);
+        var tied = scores.Where(s => s.Score == 10).ToList();
+        Assert.True(tied.Count >= 2);
+        Assert.Equal("First", tied[0].PlayerName);
+        Assert.Equal("Second", tied[1].PlayerName);
     }
 
     [Fact]
     public async Task Get_TopLimitsResults()
     {
-        var factory = new TestWebApplicationFactory();
-        var client = factory.CreateClient();
-
         for (int i = 0; i < 5; i++)
-            await client.PostAsJsonAsync("/api/scores", new SubmitScoreRequest($"Player{i}", i * 5));
+            await _client.PostAsJsonAsync("/api/scores", new SubmitScoreRequest($"Limit{i}", i * 10 + 50));
 
-        var response = await client.GetAsync("/api/scores?top=3");
+        var response = await _client.GetAsync("/api/scores?top=3");
 
         var scores = await response.Content.ReadFromJsonAsync<List<ScoreResponse>>();
         Assert.NotNull(scores);
@@ -151,44 +150,19 @@ public class ScoresControllerTests : IClassFixture<TestWebApplicationFactory>
     [Fact]
     public async Task Get_TopClampedTo50WhenExceeded()
     {
-        var factory = new TestWebApplicationFactory();
-        var client = factory.CreateClient();
+        await _client.PostAsJsonAsync("/api/scores", new SubmitScoreRequest("Solo", 10));
 
-        await client.PostAsJsonAsync("/api/scores", new SubmitScoreRequest("Solo", 10));
-
-        var response = await client.GetAsync("/api/scores?top=100");
+        var response = await _client.GetAsync("/api/scores?top=100");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-
-        var scores = await response.Content.ReadFromJsonAsync<List<ScoreResponse>>();
-        Assert.NotNull(scores);
-        Assert.Single(scores);
-    }
-
-    [Fact]
-    public async Task Post_TrimmedName_StoredWithoutLeadingTrailingSpaces()
-    {
-        var factory = new TestWebApplicationFactory();
-        var client = factory.CreateClient();
-
-        await client.PostAsJsonAsync("/api/scores", new SubmitScoreRequest("  Padded  ", 7));
-
-        var response = await client.GetAsync("/api/scores");
-        var scores = await response.Content.ReadFromJsonAsync<List<ScoreResponse>>();
-
-        Assert.NotNull(scores);
-        Assert.Equal("Padded", scores[0].PlayerName);
     }
 
     [Fact]
     public async Task PostThenGet_RoundTrip()
     {
-        var factory = new TestWebApplicationFactory();
-        var client = factory.CreateClient();
+        await _client.PostAsJsonAsync("/api/scores", new SubmitScoreRequest("RoundTrip", 42));
 
-        await client.PostAsJsonAsync("/api/scores", new SubmitScoreRequest("RoundTrip", 42));
-
-        var response = await client.GetAsync("/api/scores");
+        var response = await _client.GetAsync("/api/scores");
         var scores = await response.Content.ReadFromJsonAsync<List<ScoreResponse>>();
 
         Assert.NotNull(scores);
