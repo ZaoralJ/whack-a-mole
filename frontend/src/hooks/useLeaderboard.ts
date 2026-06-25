@@ -20,13 +20,15 @@ export function useLeaderboard() {
     }
   }, [])
 
-  const submitPlayerScore = useCallback(async (playerName: string, score: number) => {
+  const submitPlayerScore = useCallback(async (playerName: string, score: number): Promise<boolean> => {
     setError(null)
     try {
       await submitScore({ playerName, score })
       await fetchScores()
+      return true
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to submit score')
+      return false
     }
   }, [fetchScores])
 
