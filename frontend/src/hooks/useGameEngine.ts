@@ -23,6 +23,7 @@ export function useGameEngine() {
   }, [])
 
   const startGame = useCallback(() => {
+    cancelAnimationFrame(animationFrameRef.current)
     const state = engineRef.current.start()
     setGameState(state)
     lastTickRef.current = performance.now()

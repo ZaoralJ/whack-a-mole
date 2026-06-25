@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { useGameEngine } from './hooks/useGameEngine'
 import { useLeaderboard } from './hooks/useLeaderboard'
 import { GameBoard } from './components/GameBoard'
@@ -7,7 +8,15 @@ import { Leaderboard } from './components/Leaderboard'
 
 export default function App() {
   const { gameState, startGame, whackMole } = useGameEngine()
-  const { scores, loading, error, submitPlayerScore } = useLeaderboard()
+  const { scores, loading, error, fetchScores, submitPlayerScore } = useLeaderboard()
+  const prevStatusRef = useRef(gameState.status)
+
+  useEffect(() => {
+    if (prevStatusRef.current === 'playing' && gameState.status === 'gameOver') {
+      fetchScores()
+    }
+    prevStatusRef.current = gameState.status
+  }, [gameState.status, fetchScores])
 
   const handleSubmitScore = (playerName: string) => {
     submitPlayerScore(playerName, gameState.score)
