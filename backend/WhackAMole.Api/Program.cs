@@ -11,7 +11,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors(policy => policy
-    .AllowAnyOrigin()
+    .WithOrigins(builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? ["http://localhost:5173"])
     .AllowAnyMethod()
     .AllowAnyHeader());
 
