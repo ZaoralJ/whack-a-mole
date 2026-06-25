@@ -18,8 +18,8 @@ export default function App() {
     prevStatusRef.current = gameState.status
   }, [gameState.status, fetchScores])
 
-  const handleSubmitScore = (playerName: string) => {
-    submitPlayerScore(playerName, gameState.score)
+  const handleSubmitScore = async (playerName: string): Promise<boolean> => {
+    return submitPlayerScore(playerName, gameState.score)
   }
 
   return (
