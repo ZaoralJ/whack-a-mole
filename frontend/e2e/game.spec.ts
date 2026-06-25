@@ -74,10 +74,10 @@ test.describe('Whack-a-Mole Game', () => {
     await expect(page.getByRole('button', { name: 'Submit Score' })).toBeEnabled()
   })
 
-  test('game board has 9 mole holes', async ({ page }) => {
+  test('game board has 25 mole holes', async ({ page }) => {
     await page.getByRole('button', { name: 'Start Game' }).click()
 
     const holes = page.locator('.mole-hole')
-    await expect(holes).toHaveCount(9)
+    await expect(holes).toHaveCount(25)
   })
 })

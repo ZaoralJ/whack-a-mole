@@ -19,7 +19,7 @@ A browser-based Whack-a-Mole game with a persistent leaderboard, built to demons
 
 ## Game Rules
 
-- 3×3 grid of mole holes
+- 5×5 grid of mole holes
 - Moles appear randomly in holes, stay visible for ~1 second
 - Tap/click a visible mole → score +1, mole disappears
 - Game lasts 30 seconds
@@ -95,7 +95,7 @@ frontend/
 │   │   └── useLeaderboard.ts    # Fetches/submits scores
 │   │
 │   ├── components/              # React components — UI only
-│   │   ├── GameBoard.tsx        # 3×3 grid layout
+│   │   ├── GameBoard.tsx        # 5×5 grid layout
 │   │   ├── Mole.tsx             # Single mole hole (visible/hidden)
 │   │   ├── Scoreboard.tsx       # Current score + timer display
 │   │   ├── GameOver.tsx         # Name input + submit score
@@ -222,7 +222,7 @@ Get top scores.
 ```typescript
 // types.ts
 interface GameConfig {
-  gridSize: number;          // 3 (3×3)
+  gridSize: number;          // 5 (5×5)
   gameDurationMs: number;    // 30000
   moleVisibleMs: number;     // 1000
   maxVisibleMoles: number;   // 2

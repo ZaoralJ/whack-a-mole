@@ -31,7 +31,7 @@ time management. Runs entirely in the browser with no server dependency.
 size, game duration, mole visibility time, maximum simultaneous visible moles,
 and spawn interval. Configurable via environment variable
 `VITE_GAME_DURATION_MS` for test speedup; otherwise defaults to 30-second games
-on a 3×3 grid.
+on a 5×5 grid.
 
 **Code references.**
 - `frontend/src/engine/types.ts:1` — `GameConfig` interface definition
@@ -157,7 +157,7 @@ ends.
 ### Spawn Interval
 
 **Definition.** The minimum time between mole appearances, in milliseconds
-(default 800ms). The engine accumulates elapsed time and attempts to spawn a new
+(default 600ms). The engine accumulates elapsed time and attempts to spawn a new
 mole only when the interval is reached and the [max visible moles](#max-visible-moles)
 cap is not exceeded.
 
@@ -174,7 +174,7 @@ cap is not exceeded.
 ### Max Visible Moles
 
 **Definition.** The maximum number of moles that can be visible simultaneously
-(default 2). When this cap is reached, no new moles spawn until one expires or
+(default 3). When this cap is reached, no new moles spawn until one expires or
 is whacked.
 
 **Code references.**
@@ -374,7 +374,7 @@ Presentational React components — no game logic, no direct API calls.
 
 ### Game Board
 
-**Definition.** The 3×3 CSS grid container that renders nine [Mole](#mole)
+**Definition.** The 5×5 CSS grid container that renders 25 [Mole](#mole)
 components. Receives the moles array and an `onWhack` callback from the parent.
 
 **Code references.**

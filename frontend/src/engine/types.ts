@@ -22,11 +22,11 @@ export interface GameState {
 }
 
 export const DEFAULT_CONFIG: GameConfig = {
-  gridSize: 3,
+  gridSize: 5,
   gameDurationMs: import.meta.env.VITE_GAME_DURATION_MS
     ? Number(import.meta.env.VITE_GAME_DURATION_MS)
     : 30_000,
   moleVisibleMs: 1_000,
-  maxVisibleMoles: 2,
-  spawnIntervalMs: 800,
+  maxVisibleMoles: 3,
+  spawnIntervalMs: 600,
 }
