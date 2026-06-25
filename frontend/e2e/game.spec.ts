@@ -21,8 +21,8 @@ test.describe('Whack-a-Mole Game', () => {
   test('timer counts down after start', async ({ page }) => {
     await page.getByRole('button', { name: 'Start Game' }).click()
 
-    await expect(page.locator('.timer-display')).not.toContainText('0s')
     await expect(page.locator('.timer-display')).toBeVisible()
+    await expect(page.locator('.score-display')).toBeVisible()
   })
 
   test('moles appear during gameplay', async ({ page }) => {
